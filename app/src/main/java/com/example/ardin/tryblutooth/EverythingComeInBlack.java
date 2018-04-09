@@ -1,11 +1,14 @@
 package com.example.ardin.tryblutooth;
-
+//yeah
+import android.app.ActionBar;
 import android.graphics.Color;
+import android.graphics.drawable.ColorDrawable;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.Date;
 import java.util.UUID;
 import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
@@ -33,18 +36,36 @@ import com.github.mikephil.charting.highlight.Highlight;
 import com.github.mikephil.charting.interfaces.datasets.ILineDataSet;
 import com.github.mikephil.charting.listener.OnChartValueSelectedListener;
 import com.github.mikephil.charting.utils.ColorTemplate;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
 
-public class MainActivity extends AppCompatActivity implements
+import java.util.Calendar;
+
+
+
+public class EverythingComeInBlack extends AppCompatActivity implements
         OnChartValueSelectedListener{
+
+    //time//
+    Date currentTime = Calendar.getInstance().getTime();
+    //////
     //////////////////////////////graph/////////////////////////////////////
     private LineChart mChart;
+
+    //firebase//
+    // Write a message to the database
+    FirebaseDatabase database = FirebaseDatabase.getInstance();
+    DatabaseReference myRef = database.getReference("time");
+    DatabaseReference myValue = database.getReference("value");
 
     ///////////////////////////////end graph////////////////////////////////
 
     //Button btnOn, btnOff;
     TextView txtArduino, txtString, txtStringLength, sensorView0, sensorView1, sensorView2, sensorView5;
-    int converted = 0;
-
+    //int converted = 0;
+    int[] converted = new int[4];
+    //int[] converted = new int[600];
+    int i = 0;
     Handler bluetoothIn;
 
     final int handlerState = 0;                        //used to identify handler message
@@ -65,6 +86,7 @@ public class MainActivity extends AppCompatActivity implements
         super.onCreate(savedInstanceState);
 
         setContentView(R.layout.activity_main);
+
 
         //Link the buttons and textViews to respective views
         //btnOn = (Button) findViewById(R.id.buttonOn);
@@ -98,7 +120,7 @@ public class MainActivity extends AppCompatActivity implements
         mChart.setPinchZoom(true);
 
         // set an alternative background color
-        mChart.setBackgroundColor(Color.LTGRAY);
+        mChart.setBackgroundColor(Color.BLACK);
 
         LineData data = new LineData();
         data.setValueTextColor(Color.WHITE);
@@ -148,19 +170,30 @@ public class MainActivity extends AppCompatActivity implements
 
                         if (recDataString.charAt(0) == '#')                             //if it starts with # we know it is what we are looking for
                         {
+                            String packvalue = recDataString.substring(1, 13);
+                            myValue.setValue(packvalue);
                             String sensor0 = recDataString.substring(1, 4);             //get sensor value from string between indices 1-5
-                            //String sensor1 = recDataString.substring(6, 10);            //same again...
-                            //String sensor2 = recDataString.substring(11, 15);
-                            //String sensor3 = recDataString.substring(16, 20);
+                            String sensor1 = recDataString.substring(4, 7);            //same again...
+                            String sensor2 = recDataString.substring(7, 10);
+                            String sensor3 = recDataString.substring(10, 13);
 
                             sensorView0.setText(" Sensor 0 Voltage = " + sensor0 + "V");    //update the textviews with sensor values
                             //sensorView1.setText(" Sensor 1 Voltage = " + sensor1 + "V");
                             //sensorView2.setText(" Sensor 2 Voltage = " + sensor2 + "V");
 
                             //System.out.format(sensor0);
-                            converted=Integer.parseInt(sensor0);
+                            i = 0;
+                            converted[0]=Integer.parseInt(sensor0);
+                            converted[1]=Integer.parseInt(sensor1);
+                            converted[2]=Integer.parseInt(sensor2);
+                            converted[3]=Integer.parseInt(sensor3);
                             addEntry();
-                            System.out.format("The value of i is: %d%n", converted);
+                            System.out.format("The value of i is: %d%n", converted[0]);
+                            System.out.format("The value of i is: %d%n", converted[1]);
+                            System.out.format("The value of i is: %d%n", converted[2]);
+                            System.out.format("The value of i is: %d%n", converted[3]);
+                            //feedMultiple();
+                            //System.out.format("The value of i is: %d%n", converted);
                             //mChart.notifyDataSetChanged(); // let the chart know it's data changed
                             //mChart.invalidate(); // refresh
                         }
@@ -181,19 +214,19 @@ public class MainActivity extends AppCompatActivity implements
         checkBTState();
 
         // Set up onClick listeners for buttons to send 1 or 0 to turn on/off LED
-       // btnOff.setOnClickListener(new OnClickListener() {
-       //     public void onClick(View v) {
+        // btnOff.setOnClickListener(new OnClickListener() {
+        //     public void onClick(View v) {
         //        mConnectedThread.write("0");    // Send "0" via Bluetooth
-       //         Toast.makeText(getBaseContext(), "Turn off LED", Toast.LENGTH_SHORT).show();
-       //     }
-       // });
+        //         Toast.makeText(getBaseContext(), "Turn off LED", Toast.LENGTH_SHORT).show();
+        //     }
+        // });
 
-       // btnOn.setOnClickListener(new OnClickListener() {
-       //     public void onClick(View v) {
-       //         mConnectedThread.write("1");    // Send "1" via Bluetooth
-       //         Toast.makeText(getBaseContext(), "Turn on LED", Toast.LENGTH_SHORT).show();
-       //     }
-      //  });
+        // btnOn.setOnClickListener(new OnClickListener() {
+        //     public void onClick(View v) {
+        //         mConnectedThread.write("1");    // Send "1" via Bluetooth
+        //         Toast.makeText(getBaseContext(), "Turn on LED", Toast.LENGTH_SHORT).show();
+        //     }
+        //  });
     }
 
     private BluetoothSocket createBluetoothSocket(BluetoothDevice device) throws IOException {
@@ -319,36 +352,40 @@ public class MainActivity extends AppCompatActivity implements
     }
     ///////////////////////////graph///////////////////////////
     private void addEntry() {
+        while(i != 4){
+            LineData data = mChart.getData();
 
-        LineData data = mChart.getData();
+            if (data != null) {
 
-        if (data != null) {
+                ILineDataSet set = data.getDataSetByIndex(0);
+                // set.addEntry(...); // can be called as well
 
-            ILineDataSet set = data.getDataSetByIndex(0);
-            // set.addEntry(...); // can be called as well
+                if (set == null) {
+                    set = createSet();
+                    data.addDataSet(set);
+                }
 
-            if (set == null) {
-                set = createSet();
-                data.addDataSet(set);
+                //data.addEntry(new Entry(set.getEntryCount(), (float) (Math.random() * 40) + 30f), 0);
+                data.addEntry(new Entry(set.getEntryCount(), converted[i]), 0);
+                data.notifyDataChanged();
+                //heartRate++;
+                // let the chart know it's data has changed
+                mChart.notifyDataSetChanged();
+
+                // limit the number of visible entries
+                mChart.setVisibleXRangeMaximum(120);
+                // mChart.setVisibleYRange(30, AxisDependency.LEFT);
+
+                // move to the latest entry
+                mChart.moveViewToX(data.getEntryCount());
+
+                // this automatically refreshes the chart (calls invalidate())
+                // mChart.moveViewTo(data.getXValCount()-7, 55f,
+                // AxisDependency.LEFT);
             }
-
-            //data.addEntry(new Entry(set.getEntryCount(), (float) (Math.random() * 40) + 30f), 0);
-            data.addEntry(new Entry(set.getEntryCount(), converted), 0);
-            data.notifyDataChanged();
-            //heartRate++;
-            // let the chart know it's data has changed
-            mChart.notifyDataSetChanged();
-
-            // limit the number of visible entries
-            mChart.setVisibleXRangeMaximum(120);
-            // mChart.setVisibleYRange(30, AxisDependency.LEFT);
-
-            // move to the latest entry
-            mChart.moveViewToX(data.getEntryCount());
-
-            // this automatically refreshes the chart (calls invalidate())
-            // mChart.moveViewTo(data.getXValCount()-7, 55f,
-            // AxisDependency.LEFT);
+            //myRef.setValue(converted[i]);
+            i++;
+        if(i==3){myRef.setValue(currentTime);}
         }
     }
 
@@ -356,10 +393,11 @@ public class MainActivity extends AppCompatActivity implements
 
         LineDataSet set = new LineDataSet(null, "Dynamic Data");
         set.setAxisDependency(YAxis.AxisDependency.LEFT);
-        set.setColor(ColorTemplate.getHoloBlue());
-        set.setCircleColor(Color.WHITE);
-        set.setLineWidth(2f);
-        set.setCircleRadius(4f);
+        //set.setColor(ColorTemplate.getHoloBlue());
+        set.setColor(Color.GREEN);
+        set.setCircleColor(Color.GREEN);
+        set.setLineWidth(4f);
+        set.setCircleRadius(1f);
         set.setFillAlpha(65);
         set.setFillColor(ColorTemplate.getHoloBlue());
         set.setHighLightColor(Color.rgb(244, 117, 117));
@@ -391,7 +429,7 @@ public class MainActivity extends AppCompatActivity implements
                 //  int i = 0;
                 // while (i == 0){
                 for (int i = 0; i < 130; i++) {
-                   // converted = ecgdataset[i];
+                    // converted = ecgdataset[i];
                     // Don't generate garbage runnables inside the loop.
                     runOnUiThread(runnable);
 
