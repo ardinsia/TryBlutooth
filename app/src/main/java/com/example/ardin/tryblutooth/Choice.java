@@ -21,7 +21,7 @@ public class Choice extends AppCompatActivity implements View.OnClickListener{
     public void onClick(View view) {
         switch(view.getId()){
             case R.id.justtry:
-                startActivity(new Intent(this,DeviceListActivity.class));
+                startActivity(new Intent(this,RealTomkins.class));
                 break;
 
             case R.id.ecgreader:

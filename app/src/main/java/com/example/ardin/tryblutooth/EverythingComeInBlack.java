@@ -46,6 +46,8 @@ import java.util.Calendar;
 public class EverythingComeInBlack extends AppCompatActivity implements
         OnChartValueSelectedListener{
 
+
+
     //time//
     Date currentTime = Calendar.getInstance().getTime();
     //////
@@ -457,4 +459,5 @@ public class EverythingComeInBlack extends AppCompatActivity implements
         Log.i("Nothing selected", "Nothing selected.");
     }
     //////////////////////////end graph////////////////////////
+
 }
